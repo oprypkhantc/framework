@@ -2,6 +2,9 @@
 
 namespace Illuminate\Foundation\Testing;
 
+use PHPUnit\Framework\Assert;
+use RuntimeException;
+
 trait DatabaseTransactions
 {
     /**
@@ -29,6 +32,10 @@ trait DatabaseTransactions
             foreach ($this->connectionsToTransact() as $name) {
                 $connection = $database->connection($name);
                 $dispatcher = $connection->getEventDispatcher();
+
+                if ($connection->transactionLevel() === 0) {
+                   throw new RuntimeException('Transaction started by DatabaseTransactions was committed or rolled back. Have you missed a DB::commit() or a DB::rollBack()?');
+                }
 
                 $connection->unsetEventDispatcher();
                 $connection->rollBack();
